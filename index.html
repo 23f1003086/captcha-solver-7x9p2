@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captcha Solver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+        }
+        #progress {
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        #result {
+            font-size: 24px;
+            color: green;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Captcha Solver</h1>
+    <div id="imageSource"></div>
+    <img id="captchaImage" src="" alt="Captcha Image">
+    <div id="progress"></div>
+    <div id="result"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script>
+        const defaultImageUrl = 'sample.png';
+        const urlParams = new URLSearchParams(window.location.search);
+        const captchaUrl = urlParams.get('url') || defaultImageUrl;
+        const imageSourceDiv = document.getElementById('imageSource');
+        const captchaImage = document.getElementById('captchaImage');
+        const progressDiv = document.getElementById('progress');
+        const resultDiv = document.getElementById('result');
+
+        imageSourceDiv.textContent = `Using image from: ${captchaUrl}`;
+        captchaImage.src = captchaUrl;
+
+        function solveCaptcha() {
+            progressDiv.textContent = 'Solving captcha...';
+            Tesseract.recognize(
+                captchaUrl,
+                'eng',
+                {
+                    logger: info => {
+                        progressDiv.textContent = `Progress: ${Math.round(info.progress * 100)}%`;
+                    }
+                }
+            ).then(({ data: { text } }) => {
+                resultDiv.textContent = `Solved Text: ${text.trim()}`;
+            }).catch(err => {
+                resultDiv.textContent = 'Error solving captcha.';
+                console.error(err);
+            });
+        }
+
+        window.onload = () => {
+            setTimeout(() => {
+                if (!resultDiv.textContent) {
+                    resultDiv.textContent = 'Timeout: Solving took too long.';
+                }
+            }, 15000);
+            solveCaptcha();
+        };
+    </script>
+</body>
+</html>
